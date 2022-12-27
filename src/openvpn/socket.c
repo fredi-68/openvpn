@@ -1793,7 +1793,7 @@ resolve_remote(struct link_socket *sock,
     }
 
     /* should we re-use previous active remote address? */
-    if (link_socket_actual_defined(&sock->info.lsa->actual))
+    if (false && link_socket_actual_defined(&sock->info.lsa->actual))
     {
         msg(M_INFO, "TCP/UDP: Preserving recently used remote address: %s",
             print_link_socket_actual(&sock->info.lsa->actual, &gc));
