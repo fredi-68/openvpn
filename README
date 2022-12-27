@@ -1,7 +1,10 @@
 # fredi_68/OpenVPN
 
-This fork patches out the address reuse logic in socket.c
+This fork patches out the address reuse logic in `socket.c`
 Because application level DNS caching is the devil.
+
+TODO: Consider patching out the DNS cache from `context_1` as well. We have a local systemwide resolver cache and we should use it.
+
 ## Original README
 
 OpenVPN -- A Secure tunneling daemon
