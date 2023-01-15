@@ -5,7 +5,7 @@
  *             packet encryption, packet authentication, and
  *             packet compression.
  *
- *  Copyright (C) 2002-2022 OpenVPN Inc <sales@openvpn.net>
+ *  Copyright (C) 2002-2023 OpenVPN Inc <sales@openvpn.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2
@@ -865,8 +865,6 @@ man_remote_entry_count(struct management *man)
     }
 }
 
-#define min(a, b) ((a) < (b) ? (a) : (b))
-
 static void
 man_remote_entry_get(struct management *man, const char *p1, const char *p2)
 {
@@ -875,12 +873,10 @@ man_remote_entry_get(struct management *man, const char *p1, const char *p2)
     if (man->persist.callback.remote_entry_get
         && man->persist.callback.remote_entry_count)
     {
-        bool res;
-        unsigned int from, to;
         unsigned int count = (*man->persist.callback.remote_entry_count)(man->persist.callback.arg);
 
-        from = (unsigned int) atoi(p1);
-        to = p2 ? (unsigned int) atoi(p2) : from + 1;
+        unsigned int from = (unsigned int) atoi(p1);
+        unsigned int to = p2 ? (unsigned int) atoi(p2) : from + 1;
 
         if (!strcmp(p1, "all"))
         {
@@ -888,10 +884,10 @@ man_remote_entry_get(struct management *man, const char *p1, const char *p2)
             to = count;
         }
 
-        for (unsigned int i = from; i < min(to, count); i++)
+        for (unsigned int i = from; i < min_uint(to, count); i++)
         {
             char *remote = NULL;
-            res = (*man->persist.callback.remote_entry_get)(man->persist.callback.arg, i, &remote);
+            bool res = (*man->persist.callback.remote_entry_get)(man->persist.callback.arg, i, &remote);
             if (res && remote)
             {
                 msg(M_CLIENT, "%u,%s", i, remote);
@@ -4121,9 +4117,16 @@ management_sleep(const int n)
     {
         management_event_loop_n_seconds(management, n);
     }
-    else if (n > 0)
+    else
     {
-        sleep(n);
+#ifdef _WIN32
+        win32_sleep(n);
+#else
+        if (n > 0)
+        {
+            sleep(n);
+        }
+#endif
     }
 }
 
@@ -4164,13 +4167,18 @@ man_persist_client_stats(struct management *man, struct context *c)
 
 #else  /* ifdef ENABLE_MANAGEMENT */
 
+#include "win32.h"
 void
 management_sleep(const int n)
 {
+#ifdef _WIN32
+    win32_sleep(n);
+#else
     if (n > 0)
     {
         sleep(n);
     }
+#endif /* ifdef _WIN32 */
 }
 
 #endif /* ENABLE_MANAGEMENT */
